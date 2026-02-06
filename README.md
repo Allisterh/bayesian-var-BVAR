@@ -73,18 +73,18 @@ Run tests:
 pytest
 ```
 
-## Resultados
+## Results
 
-Ejemplos de salidas generadas usando los datos incluidos:
+Examples of outputs generated using the included data:
 
-<p>
-  <img src="outputs/irfs.png" alt="IRFs" width="520">
-  <img src="outputs/fevd.png" alt="FEVD" width="520">
-</p>
-<p>
-  <img src="outputs/posteriors.png" alt="Densidades posteriores" width="420">
-  <img src="outputs/mcmc.png" alt="Trazas MCMC" width="420">
-</p>
+| Impulse Response Functions (IRFs) | Forecast Error Variance Decomposition (FEVD) |
+|---|---|
+| <img src="outputs/irfs.png" alt="Impulse Response Functions (IRFs)" width="100%"> | <img src="outputs/fevd.png" alt="Forecast Error Variance Decomposition (FEVD)" width="100%"> |
+
+| Posterior Densities | MCMC Trace Plots |
+|---|---|
+| <img src="outputs/posteriors.png" alt="Posterior densities" width="100%"> | <img src="outputs/mcmc.png" alt="MCMC trace plots" width="100%"> |
+
 
 ## API (FastAPI)
 
