@@ -6,3 +6,5 @@ openpyxl
 fastapi
 uvicorn
 python-multipart
+arviz
+pymc

@@ -10,6 +10,7 @@ __all__ = [
     "fevd",
     "plots",
     "api",
+    "diagnostics",
 ]
 
 __version__ = "0.1.0"

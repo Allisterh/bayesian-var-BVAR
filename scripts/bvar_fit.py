@@ -37,6 +37,13 @@ def _parse_bounds(value: str | None):
     return bounds
 
 
+def _chain_seeds(seed: int | None, chains: int) -> list[int | None]:
+    if seed is None:
+        return [None] * chains
+    rng = np.random.default_rng(seed)
+    return rng.integers(0, 2**32 - 1, size=chains, dtype=np.uint32).tolist()
+
+
 def _load_csv(path: str, date_col: str, columns: list[str] | None):
     df = pd.read_csv(path)
     if columns:
@@ -52,6 +59,7 @@ def main():
     parser.add_argument("--output", required=True, help="Path to output NPZ file")
     parser.add_argument("--lags", type=int, default=3, help="Number of lags")
     parser.add_argument("--draws", type=int, default=2000, help="Posterior draws")
+    parser.add_argument("--chains", type=int, default=1, help="Number of chains")
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     parser.add_argument("--date-col", default="Fecha", help="Date column name")
     parser.add_argument(
@@ -72,6 +80,9 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.chains < 1:
+        raise ValueError("chains must be >= 1")
 
     columns = _parse_columns(args.columns)
     df = _load_csv(args.data, args.date_col, columns)
@@ -101,24 +112,52 @@ def main():
     lambdas = result.x
     YP, XP = minnesota_dummy_observations(lambdas, delta, su, s0, y_mean, args.lags)
     Bps, Hs, Ss, vd = posterior_params(Y, X, YP, XP)
-    omegas, betas = sample_posterior(Bps, Hs, Ss, vd, args.draws, seed=args.seed)
+
+    if args.chains == 1:
+        omegas, betas = sample_posterior(Bps, Hs, Ss, vd, args.draws, seed=args.seed)
+        omegas_chains = None
+        betas_chains = None
+    else:
+        chain_seeds = _chain_seeds(args.seed, args.chains)
+        n = Bps.shape[1]
+        k = Bps.shape[0]
+        omegas_chains = np.zeros((args.chains, args.draws, n, n))
+        betas_chains = np.zeros((args.chains, args.draws, n, k))
+        for idx, chain_seed in enumerate(chain_seeds):
+            omegas_chains[idx], betas_chains[idx] = sample_posterior(
+                Bps,
+                Hs,
+                Ss,
+                vd,
+                args.draws,
+                seed=chain_seed,
+            )
+        omegas = omegas_chains.reshape(args.chains * args.draws, n, n)
+        betas = betas_chains.reshape(args.chains * args.draws, n, k)
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    np.savez(
-        output,
-        omegas=omegas,
-        betas=betas,
-        lags=args.lags,
-        columns=np.array(columns, dtype=object),
-        lambdas=lambdas,
-        y_mean=y_mean,
-        delta=delta,
-        su=su,
-        vd=vd,
-        draws=args.draws,
-        seed=args.seed,
-    )
+    payload = {
+        "omegas": omegas,
+        "betas": betas,
+        "lags": args.lags,
+        "columns": np.array(columns, dtype=object),
+        "lambdas": lambdas,
+        "y_mean": y_mean,
+        "delta": delta,
+        "su": su,
+        "vd": vd,
+        "draws": args.draws,
+        "chains": args.chains,
+        "total_draws": omegas.shape[0],
+        "seed": args.seed,
+    }
+    if omegas_chains is not None:
+        payload["omegas_chains"] = omegas_chains
+    if betas_chains is not None:
+        payload["betas_chains"] = betas_chains
+
+    np.savez(output, **payload)
 
 
 if __name__ == "__main__":

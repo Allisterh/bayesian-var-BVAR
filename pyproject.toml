@@ -20,6 +20,8 @@ dependencies = [
   "fastapi",
   "uvicorn",
   "python-multipart",
+  "arviz",
+  "pymc",
 ]
 
 [tool.setuptools]
