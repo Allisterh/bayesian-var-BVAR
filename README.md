@@ -75,13 +75,16 @@ pytest
 
 ## Resultados
 
-Ejemplos de salidas generadas (IRF, FEVD y densidades posteriores) usando los datos incluidos:
+Ejemplos de salidas generadas usando los datos incluidos:
 
-![IRFs](outputs/irfs.png)
-![FEVD](outputs/fevd.png)
-![Densidades posteriores](outputs/posteriors.png)
-![Trazas MCMC](outputs/mcmc.png)
-![Series analisis](outputs/series%20analisis.png)
+<p>
+  <img src="outputs/irfs.png" alt="IRFs" width="520">
+  <img src="outputs/fevd.png" alt="FEVD" width="520">
+</p>
+<p>
+  <img src="outputs/posteriors.png" alt="Densidades posteriores" width="420">
+  <img src="outputs/mcmc.png" alt="Trazas MCMC" width="420">
+</p>
 
 ## API (FastAPI)
 

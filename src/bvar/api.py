@@ -6,6 +6,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel, Field
 
 from .design import build_var_design
 from .fevd import fevd_from_irf
@@ -14,7 +15,56 @@ from .marginal import optimize_minnesota_hyperparams
 from .posterior import posterior_params, sample_posterior
 from .priors import ar1_prior_stats, minnesota_dummy_observations
 
-app = FastAPI(title="BVAR API", version="0.1.0")
+app = FastAPI(
+    title="BVAR API",
+    version="0.1.0",
+    description="API para estimar un BVAR con priors Minnesota y entregar IRF/FEVD.",
+)
+
+
+class HealthResponse(BaseModel):
+    status: str = Field(description="Estado del servicio")
+
+
+class PosteriorSummary(BaseModel):
+    mean: list = Field(description="Media por elemento del parámetro")
+    std: list = Field(description="Desviación estándar por elemento del parámetro")
+
+
+class PosteriorBlock(BaseModel):
+    omega: PosteriorSummary = Field(description="Resumen de la covarianza")
+    beta: PosteriorSummary = Field(description="Resumen de coeficientes")
+
+
+class IRFBlock(BaseModel):
+    q_10: list = Field(description="Cuantil 5%")
+    q_16: list = Field(description="Cuantil 16%")
+    q_50: list = Field(description="Mediana")
+    q_84: list = Field(description="Cuantil 84%")
+    q_90: list = Field(description="Cuantil 95%")
+
+
+class MetaBlock(BaseModel):
+    columns: list[str] = Field(description="Columnas utilizadas")
+    lags: int = Field(description="Lags del VAR")
+    draws: int = Field(description="Número de draws")
+    irf_horizon: int = Field(description="Horizonte IRF")
+    fevd_horizon: int = Field(description="Horizonte FEVD")
+    seed: int | None = Field(description="Semilla aleatoria")
+    lambdas: list[float] = Field(description="Hiperparámetros Minnesota")
+
+
+class DrawsBlock(BaseModel):
+    omegas: list = Field(description="Draws de matrices Omega")
+    betas: list = Field(description="Draws de betas")
+
+
+class EstimateResponse(BaseModel):
+    meta: MetaBlock
+    posterior: PosteriorBlock
+    irf: IRFBlock
+    fevd: list = Field(description="FEVD por variable y horizonte")
+    draws: DrawsBlock | None = Field(default=None, description="Draws completos opcionales")
 
 
 def _parse_columns(value: str | None) -> list[str] | None:
@@ -70,24 +120,35 @@ def _summarize_draws(draws: np.ndarray) -> dict[str, Any]:
     }
 
 
-@app.get("/health")
+@app.get("/health", response_model=HealthResponse, tags=["health"])
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/estimate")
+@app.post(
+    "/estimate",
+    response_model=EstimateResponse,
+    response_model_exclude_none=True,
+    tags=["bvar"],
+)
 async def estimate(
-    file: UploadFile = File(...),
-    lags: int = Form(3),
-    draws: int = Form(2000),
-    seed: int | None = Form(None),
-    date_col: str = Form("Fecha"),
-    columns: str | None = Form(None),
-    opt_starts: int = Form(10),
-    bounds: str | None = Form(None),
-    irf_horizon: int = Form(35),
-    fevd_horizon: int | None = Form(None),
-    include_draws: bool = Form(False),
+    file: UploadFile = File(..., description="CSV con series en columnas"),
+    lags: int = Form(3, description="Número de lags del VAR"),
+    draws: int = Form(2000, description="Número de draws posteriores"),
+    seed: int | None = Form(None, description="Semilla para RNG"),
+    date_col: str = Form("Fecha", description="Nombre de la columna de fecha"),
+    columns: str | None = Form(
+        None,
+        description="Lista de columnas separadas por coma (opcional)",
+    ),
+    opt_starts: int = Form(10, description="Número de starts para optimización"),
+    bounds: str | None = Form(
+        None,
+        description="Bounds por lambda como low:high,low:high,... (5 entradas)",
+    ),
+    irf_horizon: int = Form(35, description="Horizonte IRF"),
+    fevd_horizon: int | None = Form(None, description="Horizonte FEVD"),
+    include_draws: bool = Form(False, description="Incluir draws completos"),
 ) -> dict[str, Any]:
     if lags < 1:
         raise HTTPException(status_code=400, detail="lags must be >= 1")
@@ -171,6 +232,7 @@ async def estimate(
             "q_90": bands["q_90"].tolist(),
         },
         "fevd": fevd.tolist(),
+        "draws": None,
     }
 
     if include_draws:
