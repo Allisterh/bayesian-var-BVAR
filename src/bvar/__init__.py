@@ -9,6 +9,7 @@ __all__ = [
     "irf",
     "fevd",
     "plots",
+    "api",
 ]
 
 __version__ = "0.1.0"

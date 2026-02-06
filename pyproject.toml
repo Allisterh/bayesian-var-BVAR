@@ -17,6 +17,9 @@ dependencies = [
   "scipy",
   "matplotlib",
   "openpyxl",
+  "fastapi",
+  "uvicorn",
+  "python-multipart",
 ]
 
 [tool.setuptools]

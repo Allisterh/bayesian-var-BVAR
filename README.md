@@ -21,7 +21,7 @@ A Python implementation of a standard Bayesian Vector Autoregression (VAR) with 
 - `data/processed/`: cleaned/resampled CSVs
 - `notebooks/`: exploratory notebooks
 - `scripts/`: CLI entrypoints
-- `src/bvar/`: package modules
+- `src/bvar/`: package modules (including the FastAPI service)
 - `outputs/`: generated model outputs
 - `tests/`: pytest suite
 
@@ -72,6 +72,32 @@ python scripts/bvar_infer.py \
 Run tests:
 ```bash
 pytest
+```
+
+## Resultados
+
+Ejemplos de salidas generadas (IRF, FEVD y densidades posteriores) usando los datos incluidos:
+
+![IRFs](outputs/irfs.png)
+![FEVD](outputs/fevd.png)
+![Densidades posteriores](outputs/posteriors.png)
+![Trazas MCMC](outputs/mcmc.png)
+![Series analisis](outputs/series%20analisis.png)
+
+## API (FastAPI)
+
+Levanta la API:
+```bash
+uvicorn bvar.api:app --reload --host 0.0.0.0 --port 8000
+```
+
+Ejemplo de llamada (subir CSV y definir `lags`):
+```bash
+curl -X POST "http://localhost:8000/estimate" \
+  -F "file=@data/processed/tes_bills_quarterly.csv" \
+  -F "lags=3" \
+  -F "draws=2000" \
+  -F "irf_horizon=35"
 ```
 
 ## Features

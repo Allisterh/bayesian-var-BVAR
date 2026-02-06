@@ -3,3 +3,6 @@ pandas
 scipy
 matplotlib
 openpyxl
+fastapi
+uvicorn
+python-multipart

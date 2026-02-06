@@ -79,7 +79,6 @@ target/
 .ipynb_checkpoints
 
 # Project artifacts
-outputs/
 data/processed/
 *.npz
 
