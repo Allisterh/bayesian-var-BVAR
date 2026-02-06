@@ -86,18 +86,40 @@ Run tests:
 pytest
 ```
 
-## Results
+<h2>Results</h2>
+<p>Examples of outputs generated using the included data:</p>
 
-Examples of outputs generated using the included data:
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <figure>
+        <img src="outputs/irfs.png" alt="Impulse Response Functions (IRFs)" style="max-width:100%; height:auto;">
+        <figcaption><em>Impulse Response Functions (IRFs)</em></figcaption>
+      </figure>
+    </td>
+    <td width="50%" align="center">
+      <figure>
+        <img src="outputs/fevd.png" alt="Forecast Error Variance Decomposition (FEVD)" style="max-width:100%; height:auto;">
+        <figcaption><em>Forecast Error Variance Decomposition (FEVD)</em></figcaption>
+      </figure>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <figure>
+        <img src="outputs/posteriors.png" alt="Posterior densities" style="max-width:100%; height:auto;">
+        <figcaption><em>Posterior densities</em></figcaption>
+      </figure>
+    </td>
+    <td width="50%" align="center">
+      <figure>
+        <img src="outputs/mcmc.png" alt="MCMC trace plots" style="max-width:100%; height:auto;">
+        <figcaption><em>MCMC trace plots</em></figcaption>
+      </figure>
+    </td>
+  </tr>
+</table>
 
-<p>
-  <img src="outputs/irfs.png" alt="Impulse Response Functions (IRFs)" width="520">
-  <img src="outputs/fevd.png" alt="Forecast Error Variance Decomposition (FEVD)" width="520">
-</p>
-<p>
-  <img src="outputs/posteriors.png" alt="Posterior densities" width="420">
-  <img src="outputs/mcmc.png" alt="MCMC trace plots" width="420">
-</p>
 
 ## Convergence Diagnostics
 
