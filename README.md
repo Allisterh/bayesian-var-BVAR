@@ -15,6 +15,18 @@ A Python implementation of a standard Bayesian Vector Autoregression (VAR) with 
 - Computing Monte Carlo impulse response functions (IRFs)
 - Performing forecast error variance decomposition (FEVD)
 
+## Table of Contents
+
+- [Project Layout](#project-layout)
+- [Data](#data)
+- [Quickstart](#quickstart)
+- [Results](#results)
+- [Convergence Diagnostics](#convergence-diagnostics)
+- [API (FastAPI)](#api-fastapi)
+- [Features](#features)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Project Layout
 
 - `data/raw/`: raw source data (Excel)
@@ -41,7 +53,8 @@ pip install -e .
 ```
 
 Prepare the quarterly data:
-```python
+```bash
+python - <<'PY'
 import pandas as pd
 df = pd.read_excel('data/raw/Tes-Bills Final.xlsx')
 df['Fecha'] = pd.to_datetime(df['Fecha'])
@@ -77,23 +90,41 @@ pytest
 
 Examples of outputs generated using the included data:
 
-| Impulse Response Functions (IRFs) | Forecast Error Variance Decomposition (FEVD) |
-|---|---|
-| <img src="outputs/irfs.png" alt="Impulse Response Functions (IRFs)" width="100%"> | <img src="outputs/fevd.png" alt="Forecast Error Variance Decomposition (FEVD)" width="100%"> |
+<p>
+  <img src="outputs/irfs.png" alt="Impulse Response Functions (IRFs)" width="520">
+  <img src="outputs/fevd.png" alt="Forecast Error Variance Decomposition (FEVD)" width="520">
+</p>
+<p>
+  <img src="outputs/posteriors.png" alt="Posterior densities" width="420">
+  <img src="outputs/mcmc.png" alt="MCMC trace plots" width="420">
+</p>
 
-| Posterior Densities | MCMC Trace Plots |
-|---|---|
-| <img src="outputs/posteriors.png" alt="Posterior densities" width="100%"> | <img src="outputs/mcmc.png" alt="MCMC trace plots" width="100%"> |
+## Convergence Diagnostics
 
+Run diagnostics from an existing fit:
+```bash
+python scripts/bvar_diagnostics.py --fit outputs/fit.npz
+```
+
+Run diagnostics directly from data (pipeline + at least 2 chains):
+```bash
+python scripts/bvar_diagnostics.py \
+  --data data/processed/tes_bills_quarterly.csv \
+  --lags 3 \
+  --draws 2000 \
+  --chains 2
+```
+
+The diagnostics use ArviZ/PyMC to compute R-hat, effective sample sizes (ESS), and a full summary table.
 
 ## API (FastAPI)
 
-Levanta la API:
+Start the API:
 ```bash
 uvicorn bvar.api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Ejemplo de llamada (subir CSV y definir `lags`):
+Example request (upload CSV and set `lags`):
 ```bash
 curl -X POST "http://localhost:8000/estimate" \
   -F "file=@data/processed/tes_bills_quarterly.csv" \
